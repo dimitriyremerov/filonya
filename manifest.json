@@ -1,12 +1,19 @@
   {
     "name": "FILONYA Productivity Task Stack",
     "version": "0.0.1",
-    "default_locale": "en",
     "description": "Tool for managing open Chrome tabs using FILO stack approach",
     "permissions": ["activeTab", "storage"],
     "background": {
       "scripts": ["background.js"],
       "persistent": false
+    },
+    "commands": {
+      "new-context": {
+        "suggested_key": {
+          "default": "Alt+T"
+        },
+        "description": "New Tab + Filonya Context"
+      }
     },
     "browser_action": {
       "default_popup": "popup.html",

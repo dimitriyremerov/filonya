@@ -1,85 +1,55 @@
 'use strict';
 
-  let pushButton = document.getElementById('push');
-  let clearButton = document.getElementById('clear');
-  let stackDiv = document.getElementById('stack');
+const pushButton = document.getElementById('push');
+const clearButton = document.getElementById('clear');
+const stackDiv = document.getElementById('stack');
 
-  let stack = null;
+const getElementId = (key) =>  "stack" + Number(key).toString();
+const getElement = (key) => document.getElementById(getElementId(key));
 
-  chrome.storage.local.get('stack', data => {
-    stack = data.stack || [];
-    for (let key = 0; key < stack.length; key++) {
-      renderItem(stack[key], key);
-    }
-    renderBadge();
-  });
+const initView = async () => {
+  renderStack(await stackPromise);
+};
 
-  function createItem() {
-    return {
-      color: randomColor(),
-      tabs: [],
-    }
+const renderStack = (stack) => {
+  stackDiv.innerHTML = '';
+  for (let key = 0; key < stack.length - 1; key++) {
+    renderItem(stack[key], key);
   }
+  const [item, key] = getLastItem(stack);
+  renderItem(item, key, true);
+  renderBadge(item, key);
+};
 
-  function renderItem(item, key) {
-    let newItem = document.createElement('button');
-    newItem.setAttribute('id', 'stack' + key);
-    newItem.style.backgroundColor = item.color;
-    newItem.onclick = popItem;
-    stackDiv.prepend(newItem);
+const renderItem = (item, key, last = false) => {
+  if (!item || key === null) {
+    return;
   }
-
-  function renderBadge() {
-    let text = '';
-    if (stack && stack.length) {
-      const key = stack.length - 1;
-      const item = stack[key];
-      chrome.browserAction.setBadgeBackgroundColor({
-        color: item.color,
-      });
-      text = String.fromCharCode(65 + key);
-    }
-    chrome.browserAction.setBadgeText({ text })
+  let itemView = document.createElement('button');
+  itemView.setAttribute('id', getElementId(key));
+  itemView.innerHTML = item.label;
+  itemView.style.backgroundColor = item.color;
+  stackDiv.prepend(itemView);
+  if (last) {
+    getElement(key).onclick = processPopAction; // this only makes sense for the last item (for now)
   }
+};
 
-  function randomColor() {
-    return '#' + Math.floor((Math.random() * 16777216)).toString(16);
-  }
+const processPushAction = async () => {
+  const [item, key] = await pushItem();
+  renderItem(item, key, true);
+};
 
-  function popItem() {
-    const len = stack.length;
-    if (!len) {
-      return;
-    }
-    const item = stack.pop();
-    if (item.tabs && item.tabs.length > 0) {
-      chrome.tabs.remove(item.tabs);
-    }
-    const elementId = "stack" + (len - 1).toString();
-    let oldItem = document.getElementById(elementId);
-    stackDiv.removeChild(oldItem);
-    renderBadge();
-    saveState();
-  }
+const processPopAction = async () => {
+  const [, key] = await popItem();
+  stackDiv.removeChild(getElement(key));
+};
 
-  pushButton.onclick = () => {
-    if (!stack) {
-      return;
-    }
-    const item = createItem();
-    const id = stack.push(item) - 1;
-    renderItem(item, id);
-    renderBadge();
-    saveState();
-    setTimeout(() => chrome.tabs.create({}), 200);
-  };
+const processClearAction = () => {
+  clearAllItems().then(() => {});
+  renderStack([]);
+};
 
-  clearButton.onclick = () => {
-    stack = [];
-    stackDiv.innerHTML = '';
-    saveState();
-  };
-
-  function saveState() {
-    chrome.storage.local.set({ stack });
-  }
+pushButton.onclick = processPushAction;
+clearButton.onclick = processClearAction;
+initView().then(() => {});
