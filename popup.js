@@ -7,9 +7,7 @@ const stackDiv = document.getElementById('stack');
 const getElementId = (key) =>  "stack" + Number(key).toString();
 const getElement = (key) => document.getElementById(getElementId(key));
 
-const initView = async () => {
-  renderStack(await stackPromise);
-};
+const initView = async () => renderStack(await getStack());
 
 const renderStack = (stack) => {
   stackDiv.innerHTML = '';

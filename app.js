@@ -2,10 +2,10 @@
 const loadStorage = (cb) => chrome.storage.local.get(['stack'], cb);
 const saveStorage = async (data) => new Promise(resolve => chrome.storage.local.set(data, resolve));
 
-let stackPromise = new Promise(resolve => loadStorage(data => resolve(data.stack || [])));
+const getStack = () => new Promise(resolve => loadStorage(data => resolve(data.stack || [])));
 
 const pushItem = async () => {
-    const stack = await stackPromise;
+    const stack = await getStack();
     const item = createItem();
     const key = stack.push(item) - 1;
     item.label = getItemLabel(key);
@@ -16,7 +16,7 @@ const pushItem = async () => {
 };
 
 const popItem = async () => {
-    const stack = await stackPromise;
+    const stack = await getStack();
     if (stack.length === 0) {
         return;
     }
@@ -30,7 +30,7 @@ const popItem = async () => {
 };
 
 const clearAllItems = async () => {
-    let stack = await stackPromise;
+    let stack = await getStack();
     stack.length = 0;
     saveStorage( { stack }).then(() => {});
     renderBadge(null, null);

@@ -4,7 +4,7 @@
     "description": "Tool for managing open Chrome tabs using FILO stack approach",
     "permissions": ["activeTab", "storage"],
     "background": {
-      "scripts": ["background.js"],
+      "scripts": ["app.js", "background.js"],
       "persistent": false
     },
     "commands": {
